@@ -73,4 +73,41 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       }
     end
   end
+  #deploy node-3
+  config.vm.define "node-3" do |node3|
+    node3.vm.box = box
+    node3.vm.network :private_network, ip: node_ip_3
+    node3.vm.host_name = "node-3"
+    node3.vm.provider :virtualbox do |vb|
+    vb.customize [
+      "modifyvm", :id,
+      "--memory", "1024",
+      "--name", "node-3",
+    ]
+    (1..disk_count).each do |disk_id|
+       file_to_disk = disk_directory+"node-3-"+"#{disk_id}.vdi"
+       unless File.exist?(file_to_disk)
+         vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
+       end
+       vb.customize [
+         "storageattach", :id, 
+         "--storagectl", "SATAController", 
+         "--port", "#{disk_id}", 
+         "--device", 0, 
+         "--type", "hdd", 
+         "--medium", file_to_disk
+       ]
+     end
+   end
+   config.vm.provision :puppet do |puppet|
+     puppet.manifests_path = "puppet/manifests"
+     puppet.manifest_file = "site.pp"
+     puppet.module_path = "puppet/modules"
+     puppet.facter ={
+      'node_ip1' => node_ip_1,
+      'node_ip2' => node_ip_2,
+      'node_ip3' => node_ip_3,
+     }
+   end
+  end
 end

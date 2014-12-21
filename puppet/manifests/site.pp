@@ -3,14 +3,16 @@
 # vi :set number :
 
 # add ceph user to sudo groups
-
+group { 'ceph':
+  ensure    => 'present',
+}
 user { 'ceph':
   ensure    => 'present',
   password  => '$6$zDeCCAC8$nhbPg2.YKEYvBTaMq7ph7Q03rGv2nPlVU4fXzF0dRTMxAhHFZfPIUTK.vTvAj6AJiMcr7mzh3KS92M94hU/nj.',
-#  gid       => '1003',
   home      => '/home/ceph',
   shell     => '/bin/bash',
-#  uid       => '1001',
+  groups => ['sudo', 'ceph'],
+  require => Group['ceph'],
 }
 exec { "apt-get update":
     command => "/usr/bin/apt-get update",
@@ -28,7 +30,6 @@ file {'/home/ceph':
   ensure => directory,
   require => User['ceph'],
 }
-
 host {'node-1':
   ip => $::node_ip1,
 }
@@ -40,15 +41,14 @@ host {'node-3':
 }
 
 # configure  only ssh key access!!!!
-
-file {'/home/ceph/.ssh/id_rsa':
+file {'/home/vagrant/.ssh/id_rsa':
   ensure => file,
   source => '/vagrant/puppet/modules/profiles/id_rsa',
   owner  => 'ceph',
   group  => 'ceph',
   require => File['/home/ceph/.ssh'],
 }
-file { '/home/ceph/.ssh/id_rsa.pub':
+file { '/home/vagrant/.ssh/id_rsa.pub':
   ensure => file,
   source => '/vagrant/puppet/modules/profiles/id_rsa.pub',
   owner  => 'ceph',
@@ -57,12 +57,17 @@ file { '/home/ceph/.ssh/id_rsa.pub':
 sshkey { 'node-1':
   ensure       => present,
   host_aliases => $::node_ip1,
-  key  => 'AAAB3NzaC1yc2EAAAABIwAAAQEAyBShq4Acme0WgNdEp4wbwfoRPDzOBH6gb/UlvIx3jCdEW+yMXYb2mHr8Y1GplMWNWpgZBizrapiGsDJ/2l6NAm3LTRACG3+Jcf7jNW3VNy0Yb+3PeAQ8hKrzY9VvkXIbXQy/aKLsMD1bhJP+yyY6g0YkkWkMQvarUxca2su2Jo4JWzWc91IsAyIUtiwEE+qf81oS1JjKFT5rZLKPhD9sXoTlNDikf/m2Qvc91jS0I3MPH94eLIVoiC6J0o+MLd+TSfWinMUQUZV00JFE3MyOsZ0u6/mpjFAVhh2U2wk5oVKq0DYxD6kjAi2xTHVNuwhizRFrLP6lpVcDlhmwEtD0Cw',
- type         => 'ssh-rsa',
+  key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
+  type         => 'ssh-rsa',
 }
 sshkey { 'node-2':
  ensure       => present,
  host_aliases => $::node_ip2,
-                 key  => 'AAAB3NzaC1yc2EAAAABIwAAAQEAyBShq4Acme0WgNdEp4wbwfoRPDzOBH6gb/UlvIx3jCdEW+yMXYb2mHr8Y1GplMWNWpgZBizrapiGsDJ/2l6NAm3LTRACG3+Jcf7jNW3VNy0Yb+3PeAQ8hKrzY9VvkXIbXQy/aKLsMD1bhJP+yyY6g0YkkWkMQvarUxca2su2Jo4JWzWc91IsAyIUtiwEE+qf81oS1JjKFT5rZLKPhD9sXoTlNDikf/m2Qvc91jS0I3MPH94eLIVoiC6J0o+MLd+TSfWinMUQUZV00JFE3MyOsZ0u6/mpjFAVhh2U2wk5oVKq0DYxD6kjAi2xTHVNuwhizRFrLP6lpVcDlhmwEtD0Cw',
+ key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
  type         => 'ssh-rsa',
 }
+#ssh_authorized_key { 'gh771@laptop':
+# user => 'ceph',
+# type => 'ssh-rsa',
+# key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
+#}
