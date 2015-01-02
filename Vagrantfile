@@ -5,9 +5,9 @@ VAGRANTFILE_API_VERSION = "2"
 domain = "example.com"
 disk_directory = "./images/"
 disk_size = 50 * 1024
-box = 'vivid'
+box = 'ubuntu_14.04'
 disk_count = 2
-
+sata = 'SATA Controller'
 node_ip_1 = "192.168.33.42"
 node_ip_2 = "192.168.33.43"
 node_ip_3 = "192.168.33.44"
@@ -29,7 +29,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
          unless File.exist?(file_to_disk)
            vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
          end
-         vb.customize ["storageattach", :id, "--storagectl", "SATAController", "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
+         vb.customize ["storageattach", :id, "--storagectl", sata, "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
        end
     end
     config.vm.provision :puppet do |puppet|
@@ -59,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
        unless File.exist?(file_to_disk)
          vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
        end
-       vb.customize ["storageattach", :id, "--storagectl", "SATAController", "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
+       vb.customize ["storageattach", :id, "--storagectl", sata, "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
      end
     end
     config.vm.provision :puppet do |puppet|
@@ -90,11 +90,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
          vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
        end
        vb.customize [
-         "storageattach", :id, 
-         "--storagectl", "SATAController", 
-         "--port", "#{disk_id}", 
-         "--device", 0, 
-         "--type", "hdd", 
+         "storageattach", :id,
+         "--storagectl", sata,
+         "--port", "#{disk_id}",
+         "--device", 0,
+         "--type", "hdd",
          "--medium", file_to_disk
        ]
      end
