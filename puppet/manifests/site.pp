@@ -32,7 +32,22 @@ class app{
   }
   package {'ceph-deploy':
     ensure => 'installed',
+    require => Exec['ceph.list'], 
   }
+ package {'ntp':
+    ensure => 'installed',
+ }
+ package {'wget':
+    ensure => 'installed',
+ }
+ exec {'app-keys':
+    command => '/usr/bin/wget -q -O- "https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc" | sudo apt-key add -',
+    require => Package['wget'],
+ }
+ exec {'ceph.list':
+    command => '/bin/echo deb http://ceph.com/debian-giant/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list',
+    require => Exec['app-keys'],
+ }
 }
 
 class ssh{
