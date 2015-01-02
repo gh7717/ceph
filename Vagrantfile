@@ -27,9 +27,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
        (1..disk_count).each do |disk_id|
          file_to_disk = disk_directory+"node-1-"+"#{disk_id}.vdi"
          unless File.exist?(file_to_disk)
-           vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
+           vb.customize [
+             "createhd", "--filename", file_to_disk, 
+                         "--size", disk_size
+           ]
          end
-         vb.customize ["storageattach", :id, "--storagectl", sata, "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
+         vb.customize [
+           "storageattach", :id, 
+           "--storagectl", sata, 
+           "--port", "#{disk_id}", 
+           "--device", 0, 
+           "--type", "hdd", 
+           "--medium", file_to_disk
+         ]
        end
     end
     config.vm.provision :puppet do |puppet|
@@ -41,6 +51,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
        'node_ip2' => node_ip_2,
        'node_ip3' => node_ip_3,
       }
+#      puppet.options = "--fileserverconfig ='/vagrant/puppet/fileserver.conf'"
     end
   end
   #deploy node-2

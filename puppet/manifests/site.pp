@@ -67,9 +67,25 @@ class ssh{
    }
    # the code bellow doesn't work what I want.
    $nodes = ['node-1','node-2', 'node-3']
-   sshkey { $nodes:
+   sshkey { 'node-1':
      ensure       => present,
      host_aliases => $::node_ip1,
+     key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
+     type         => 'ssh-rsa',
+     target => '/home/ceph/.ssh/known_hosts',
+     require => File['/home/ceph/.ssh'],
+   }
+   sshkey { 'node-2':
+     ensure       => present,
+     host_aliases => $::node_ip2,
+     key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
+     type         => 'ssh-rsa',
+     target => '/home/ceph/.ssh/known_hosts',
+     require => File['/home/ceph/.ssh'],
+   }
+   sshkey { 'node-3':
+     ensure       => present,
+     host_aliases => $::node_ip3,
      key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
      type         => 'ssh-rsa',
      target => '/home/ceph/.ssh/known_hosts',
@@ -94,14 +110,48 @@ class network{
   }
 }
 # the code bellow has to work with only one node
-class ceph-deploy{
-  exec {'ceph-deploy cluster':
-    command => '/usr/bin/ceph-deploy new node-1',
+class ceph{
+  exec {'ceph-deploy-cluster':
+    command => '/usr/bin/ceph-deploy new node-1 node-2 node-3',
+    require => Class['app']
+  }
+  exec {'ceph-deploy-install':
+    command => '/usr/bin/ceph-deploy install node-1 node-2 node-3', 
+    require => Exec['ceph-deploy-cluster'],
+  }
+  exec {'ceph-deploy-gatherkeys':
+    command => '/usr/bin/ceph-deploy gatherkeys node-1 node-2 node-3',
+    require => Exec['ceph-deploy-cluster'],
+  }
+  exec {'public_network':
+    command => '/bin/echo "public network = 192.168.33.0/24" >> ceph.conf ',
+    require => Exec['ceph-deploy-cluster'],
+  }
+  exec {'ceph-deploy-monitor-install':
+    command => '/usr/bin/ceph-deploy mon create-initial',
+    require => Exec['public_network'],
   }
 }
 
 
-include users
-include app
-include ssh
-include network
+node 'node-1' {
+  include users
+  include app
+  include ssh
+  include network
+}
+
+node 'node-2' {
+  include users
+  include app
+  include ssh
+  include network
+}
+
+node 'node-3' {
+  include users
+  include app
+  include ssh
+  include network
+  include ceph
+}
