@@ -1,5 +1,4 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+# -*- mode: ruby -*- # vi: set ft=ruby :
 # vi :set number :
 
 class users{
@@ -71,7 +70,7 @@ class ssh{
      ensure       => present,
      host_aliases => $::node_ip1,
      key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ssh-rsa',
+     type         => 'ecdsa-sha2-nistp256',
      target => '/home/ceph/.ssh/known_hosts',
      require => File['/home/ceph/.ssh'],
    }
@@ -79,7 +78,7 @@ class ssh{
      ensure       => present,
      host_aliases => $::node_ip2,
      key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ssh-rsa',
+     type         => 'ecdsa-sha2-nistp256',
      target => '/home/ceph/.ssh/known_hosts',
      require => File['/home/ceph/.ssh'],
    }
@@ -87,7 +86,7 @@ class ssh{
      ensure       => present,
      host_aliases => $::node_ip3,
      key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ssh-rsa',
+     type         => 'ecdsa-sha2-nistp256',
      target => '/home/ceph/.ssh/known_hosts',
      require => File['/home/ceph/.ssh'],
    }
@@ -118,6 +117,7 @@ class ceph{
   exec {'ceph-deploy-install':
     command => '/usr/bin/ceph-deploy install node-1 node-2 node-3', 
     require => Exec['ceph-deploy-cluster'],
+    timeout => 600,
   }
   exec {'ceph-deploy-gatherkeys':
     command => '/usr/bin/ceph-deploy gatherkeys node-1 node-2 node-3',
@@ -128,7 +128,7 @@ class ceph{
     require => Exec['ceph-deploy-cluster'],
   }
   exec {'ceph-deploy-monitor-install':
-    command => '/usr/bin/ceph-deploy mon create-initial',
+    command => '/usr/bin/ceph-deploy mon create-initial --overwrite-conf',
     require => Exec['public_network'],
   }
 }
