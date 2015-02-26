@@ -31,7 +31,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
              "createhd", "--filename", file_to_disk, 
                          "--size", disk_size
            ]
-         end
+
+  #      end
          vb.customize [
            "storageattach", :id, 
            "--storagectl", sata, 
@@ -41,6 +42,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
            "--medium", file_to_disk
          ]
        end
+      end
     end
     config.vm.provision :puppet do |puppet|
       puppet.manifests_path = "puppet/manifests"
@@ -68,10 +70,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
      (1..disk_count).each do |disk_id|
        file_to_disk = disk_directory+"node-2-"+"#{disk_id}.vdi"
        unless File.exist?(file_to_disk)
-         vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
-       end
-       vb.customize ["storageattach", :id, "--storagectl", sata, "--port", "#{disk_id}", "--device", 0, "--type", "hdd", "--medium", file_to_disk]
+         vb.customize [
+	     "createhd", 
+             "--filename", file_to_disk, 
+             "--size", disk_size
+         ]
+#       end
+       vb.customize [
+              "storageattach", :id, 
+              "--storagectl", sata, 
+	      "--port", "#{disk_id}", 
+              "--device", 0, 
+              "--type", "hdd", 
+              "--medium", file_to_disk]
      end
+    end
     end
     config.vm.provision :puppet do |puppet|
       puppet.manifests_path = "puppet/manifests"
@@ -98,17 +111,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     (1..disk_count).each do |disk_id|
        file_to_disk = disk_directory+"node-3-"+"#{disk_id}.vdi"
        unless File.exist?(file_to_disk)
-         vb.customize ["createhd", "--filename", file_to_disk, "--size", disk_size]
-       end
-       vb.customize [
-         "storageattach", :id,
-         "--storagectl", sata,
-         "--port", "#{disk_id}",
-         "--device", 0,
-         "--type", "hdd",
-         "--medium", file_to_disk
-       ]
-     end
+         vb.customize [
+              "createhd", "--filename", file_to_disk, 
+              "--size", disk_size
+         ]
+         vb.customize [
+	      "storageattach", :id,
+              "--storagectl", sata,
+              "--port", "#{disk_id}",
+              "--device", 0,
+              "--type", "hdd",
+              "--medium", file_to_disk
+        ]
+     end 
+    end
    end
    config.vm.provision :puppet do |puppet|
      puppet.manifests_path = "puppet/manifests"
