@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+wget -q -O- https://raw.github.com/ceph/ceph/master/keys/autobuild.asc | sudo apt-key add -
+echo deb http://gitbuilder.ceph.com/apache2-deb-$(lsb_release -sc)-x86_64-basic/ref/master $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph-apache.list
+echo deb http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-$(lsb_release -sc)-x86_64-basic/ref/master $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph-fastcgi.list
+apt-get update && sudo apt-get install apache2 libapache2-mod-fastcgi
+a2enmod rewrite
+a2emod fastcgi
+vi /etc/sites-available/000-default.conf 
+service apache2 restart
+apt-get install radosgw radosgw-agent
+
+ceph-authtool --create-keyring /etc/ceph/ceph.client.radosgw.keyring
+chmod +r /etc/ceph/ceph.client.radosgw.keyring
+ceph-authtool /etc/ceph/ceph.client.radosgw.keyring -n client.radosgw.gateway --gen-key
+ceph-authtool -n client.radosgw.gateway --cap osd 'allow rwx' --cap mon 'allow rwx' /etc/ceph/ceph.client.radosgw.keyring
+ceph -k /etc/ceph/ceph.client.admin.keyring auth add client.radosgw.gateway -i /etc/ceph/ceph.client.radosgw.keyring
+for i in .rgw.root .rgw.control .rgw.gc .rgw.buckets .rgw.buckets.index .rgw.buckets.extra .log .intent-log .usage .users .users.email .users.swift .users.uid; do ceph osd pool create $i 128 128; done
+

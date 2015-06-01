@@ -1,6 +1,8 @@
-# -*- mode: ruby -*- # vi: set ft=ruby :
-# vi :set number :
 
+#vim: set ft=ruby :
+#-*- mode:ruby; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*- 
+#vim: ts=8 sw=2 smarttab
+#vim: numset
 class users{
   group {'ceph':
     ensure => 'present',
@@ -42,6 +44,7 @@ class app{
  exec {'app-keys':
     command => '/usr/bin/wget -q -O- "https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc" | sudo apt-key add -',
     require => Package['wget'],
+
  }
  exec {'ceph.list':
     command => '/bin/echo deb http://ceph.com/debian-giant/ $(lsb_release -sc) main | sudo tee /etc/apt/sources.list.d/ceph.list',
@@ -50,53 +53,47 @@ class app{
 }
 
 class ssh{
-   ssh_authorized_key {'ceph_key':
-     ensure          => present,
-     name            => 'gh7717@laptop',
-     user            => 'ceph',
-     type            => 'ssh-rsa',
-     key             => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDv+6Sv0XWv0ajMeT5f4VIjJxe8jazxUCxeFMlH6ys+RgUfWsPn5aEJLF9VoZjzMAmL+w9QLurpsR4n9OYV2xsFr74ABPTyAyvc3zrrXOzy5EJsn4tjC0AmTmn3LfgIQW+Uon4guk1N6hqAEyJfkhPdVlN7tiez3Ql12MTtmbxRBYNgv8QAH/vbl3KnGXk8/9WFzQLrgdsQFfXymGGfbgXqOAYMgKe24nVtf3nPWbiSuvZpOcwjxSxGbUU2Q/23Bq7ATwTQFdTp14BCE5ZsNbsaZonxx24yu1sHuKw8+XUGYfCgVso5VsBEyycpsN1F814b7OJr2ayihXHdVnpOzYul',
-   }
-   file {'/home/ceph/.ssh/id_rsa':
+  $ssh_config = '/home/vagrant/.ssh/config'
+  $private_key = '/vagrant/puppet/modules/profiles/id_rsa'
+  $public_key  = '/vagrant/puppet/modules/profiles/id_rsa.pub'
+
+  file {'/home/vagrant/.ssh/id_rsa':
      ensure => file,
-     source => '/vagrant/puppet/modules/profiles/id_rsa',
-     owner  => 'ceph',
-     group  => 'ceph',
-     require => File['/home/ceph/.ssh'],
+     source => $private_key,
+     owner  => 'vagrant',
+     group  => 'vagrant',
    }
    # the code bellow doesn't work what I want.
    $nodes = ['node-1','node-2', 'node-3']
-   sshkey { 'node-1':
+   sshkey { $nodes:
      ensure       => present,
-     host_aliases => $::node_ip1,
+#     host_aliases => $::node_ip1,
      key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ecdsa-sha2-nistp256',
-     target => '/home/ceph/.ssh/known_hosts',
-     require => File['/home/ceph/.ssh'],
+     type         => 'ssh-rsa',
+     target => '/home/vagrant/.ssh/known_hosts',
    }
-   sshkey { 'node-2':
-     ensure       => present,
-     host_aliases => $::node_ip2,
-     key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ecdsa-sha2-nistp256',
-     target => '/home/ceph/.ssh/known_hosts',
-     require => File['/home/ceph/.ssh'],
-   }
-   sshkey { 'node-3':
-     ensure       => present,
-     host_aliases => $::node_ip3,
-     key          => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDYzkF7Z5YHqzI01Jc/Ek6Alve9MsGNT4rMO98AYFWAiMMAygiJJ74H/DEOedrZOlBOzlnXCLJJ6YfFXcGTPgTQ8DQ8s4wyHHlF+uY35yrQg04v05B2x4zuoFKCwGsh5g2uVsGRZkdv6WWp02g09yuzsw8KUqv5OvsIliWOxJQYIudrZnZWgr6379Nuogc+/th6Ku38GV42EKFZp14Xvry+8UrlzBDI/CIbCGjD3VgR+1poDc1KdFbSuOJ93xDoX0xXVODRg9FzXM7l07pcSknNn+IHFMi3W4HnKS3HgggpOYBqksh7TEvmLQBTXj9QROzjjsA4ptqt7FBYPHo9w+pj',
-     type         => 'ecdsa-sha2-nistp256',
-     target => '/home/ceph/.ssh/known_hosts',
-     require => File['/home/ceph/.ssh'],
-   }
-   file {'/home/ceph/.ssh/known_hosts':
-     owner  => 'ceph',
-     group  => 'ceph',
+   file {'/home/vagrant/.ssh/known_hosts':
+     owner  => 'vagrant',
+     group  => 'vagrant',
      subscribe => Sshkey[$nodes],
    }
+   ssh_authorized_key {'ceph_key':
+     ensure          => present,
+     name            => 'gh7717@laptop',
+     user            => 'vagrant',
+     type            => 'ssh-rsa',
+     key             => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDv+6Sv0XWv0ajMeT5f4VIjJxe8jazxUCxeFMlH6ys+RgUfWsPn5aEJLF9VoZjzMAmL+w9QLurpsR4n9OYV2xsFr74ABPTyAyvc3zrrXOzy5EJsn4tjC0AmTmn3LfgIQW+Uon4guk1N6hqAEyJfkhPdVlN7tiez3Ql12MTtmbxRBYNgv8QAH/vbl3KnGXk8/9WFzQLrgdsQFfXymGGfbgXqOAYMgKe24nVtf3nPWbiSuvZpOcwjxSxGbUU2Q/23Bq7ATwTQFdTp14BCE5ZsNbsaZonxx24yu1sHuKw8+XUGYfCgVso5VsBEyycpsN1F814b7OJr2ayihXHdVnpOzYul',
+   }
+  if !defined(File[$ssh_config]) {
+    file { $ssh_config :
+      mode    => '0600',
+      owner =>  'vagrant',
+      group =>  'vagrant',
+      content => "Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile=/dev/null\n",
+    }
+  }
 }
-
+ 
 class network{
   host {'node-1':
           ip => $::node_ip1,
@@ -112,6 +109,7 @@ class network{
 class ceph{
   exec {'ceph-deploy-cluster':
     command => '/usr/bin/ceph-deploy new node-1 node-2 node-3',
+    cwd => '/home/vagrant/',
     require => Class['app']
   }
   exec {'ceph-deploy-install':
@@ -128,28 +126,41 @@ class ceph{
     require => Exec['ceph-deploy-cluster'],
   }
   exec {'ceph-deploy-monitor-install':
-    command => '/usr/bin/ceph-deploy mon create-initial --overwrite-conf',
+    command => '/usr/bin/ceph-deploy mon create-initial',
     require => Exec['public_network'],
   }
+ exec {'chmod_keyring':
+   command => '/bin/chmod +r /etc/ceph/ceph.client.admin.keyring',
+   subscribe => Exec['ceph-deploy-monitor-install'],
+ }
+ exec {'ceph-deploy-zap-disk':
+   command => '/usr/bin/ceph-deploy disk zap node-1:sdb node-1:sdc node-2:sdb node-2:sdc node-3:sdb node-3:sdc',
+   require => Exec['ceph-deploy-install'],
+ }
+ exec {'ceph-deploy-create-osd':
+   command => '/usr/bin/ceph-deploy osd create node-1:sdb node-1:sdc node-2:sdb node-2:sdc node-3:sdb node-3:sdc',
+   require => Exec['ceph-deploy-zap-disk'],
+ }
+
 }
 
 
 node 'node-1' {
-  include users
+#  include users
   include app
   include ssh
   include network
 }
 
 node 'node-2' {
-  include users
+#  include users
   include app
   include ssh
   include network
 }
 
 node 'node-3' {
-  include users
+#  include users
   include app
   include ssh
   include network
